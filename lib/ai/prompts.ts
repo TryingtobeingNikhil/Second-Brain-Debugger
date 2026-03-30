@@ -46,7 +46,7 @@ Return ONLY valid JSON, no explanation, no markdown:
 
 export const MODELS = {
   fast: process.env.OXLO_FAST_MODEL || 'mistral-7b',
-  strong: process.env.OXLO_STRONG_MODEL || 'mixtral-8x7b',
+  strong: process.env.OXLO_STRONG_MODEL || 'mistral-7b'
 }
 
 export const OXLO_BASE_URL =
