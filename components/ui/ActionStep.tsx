@@ -1,52 +1,104 @@
+'use client'
+
+import { useState } from 'react'
 import { Action, EnergyLevel } from '@/lib/types/analysis'
 import { GlowCard } from './GlowCard'
 
-const ENERGY_CONFIG: Record<EnergyLevel, { label: string; color: string }> = {
-  low:    { label: 'Low energy',    color: '#34d399' },
-  medium: { label: 'Medium energy', color: '#fbbf24' },
-  high:   { label: 'High energy',   color: '#f87171' },
+const ENERGY_CONFIG: Record<EnergyLevel, { label: string; color: string; bars: number }> = {
+  low:    { label: 'Low energy',    color: '#10b981', bars: 1 },
+  medium: { label: 'Medium energy', color: '#f59e0b', bars: 2 },
+  high:   { label: 'High energy',   color: '#ef4444', bars: 3 },
+}
+
+function BatteryIcon({ level, color }: { level: number; color: string }) {
+  return (
+    <div className="flex items-end gap-[2px] h-3">
+      {[1, 2, 3].map(bar => (
+        <div
+          key={bar}
+          className="w-[3px] rounded-sm transition-all duration-300"
+          style={{
+            height: `${(bar / 3) * 100}%`,
+            background: bar <= level ? color : 'rgba(255,255,255,0.1)',
+          }}
+        />
+      ))}
+    </div>
+  )
 }
 
 interface ActionStepProps {
   action: Action
+  index?: number
 }
 
-export function ActionStep({ action }: ActionStepProps) {
+export function ActionStep({ action, index = 0 }: ActionStepProps) {
+  const [expanded, setExpanded] = useState(false)
   const energy = ENERGY_CONFIG[action.energy_required] ?? ENERGY_CONFIG.medium
 
   return (
-    <GlowCard>
-      <div className="flex items-start gap-4">
-        {/* Step number */}
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-xs font-bold text-violet-300">
+    <GlowCard className="cursor-pointer" glowColor="rgba(99,102,241,0.15)">
+      <div
+        className="flex items-start gap-4"
+        onMouseEnter={() => setExpanded(true)}
+        onMouseLeave={() => setExpanded(false)}
+      >
+        {/* Step number circle */}
+        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-[#6366f1]/15 border border-[#6366f1]/30 flex items-center justify-center text-sm font-bold text-[#6366f1] font-mono">
           {action.step_number}
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 mb-1">
-            <h3 className="text-sm font-semibold text-white">{action.title}</h3>
-            <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Title row */}
+          <div className="flex items-start justify-between gap-3 mb-1">
+            <h3 className="ai-text text-sm font-semibold text-white leading-snug">
+              {action.title}
+            </h3>
+            <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
+              {/* Battery icon */}
+              <BatteryIcon level={energy.bars} color={energy.color} />
+              {/* Energy badge */}
               <span
-                className="text-[10px] px-2 py-0.5 rounded-full border font-medium"
-                style={{ borderColor: `${energy.color}40`, color: energy.color, background: `${energy.color}15` }}
+                className="text-[9px] px-2 py-0.5 rounded-full border font-semibold tracking-widest uppercase"
+                style={{ borderColor: `${energy.color}40`, color: energy.color, background: `${energy.color}12` }}
               >
-                {energy.label}
+                {action.energy_required}
               </span>
-              <span className="text-[10px] text-zinc-500 whitespace-nowrap">{action.timeframe}</span>
+              {/* Timeframe */}
+              <span className="text-[10px] text-white/30 font-mono whitespace-nowrap border border-white/[0.07] rounded px-1.5 py-0.5">
+                {action.timeframe}
+              </span>
             </div>
           </div>
 
-          <p className="text-sm text-zinc-400 leading-relaxed mb-2">{action.description}</p>
+          {/* Description */}
+          <p className="ai-text text-sm text-white/55 leading-relaxed mb-2">{action.description}</p>
 
-          <p className="text-xs text-zinc-500 italic">
-            <span className="text-zinc-600 not-italic font-medium">Why: </span>
-            {action.why_this_matters}
-          </p>
+          {/* Why this matters — slides down on hover */}
+          <div
+            className="overflow-hidden"
+            style={{
+              maxHeight: expanded ? '120px' : '0px',
+              opacity: expanded ? 1 : 0,
+              transition: 'max-height 300ms cubic-bezier(0.16,1,0.3,1), opacity 300ms cubic-bezier(0.16,1,0.3,1)',
+            }}
+          >
+            <div className="border-t border-white/[0.06] pt-3 mt-1">
+              <p className="text-[10px] font-semibold tracking-widest uppercase text-[#6366f1]/50 mb-1">
+                Why this matters
+              </p>
+              <p className="ai-text text-xs text-white/50 leading-relaxed italic">
+                {action.why_this_matters}
+              </p>
+            </div>
+          </div>
 
+          {/* Conflict link */}
           {action.blocks_conflict_id && (
-            <div className="mt-2 text-[10px] text-zinc-600">
-              Resolves conflict{' '}
-              <span className="text-violet-500 font-mono">{action.blocks_conflict_id}</span>
+            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-white/30">
+              <span>🔗</span>
+              <span>Resolves conflict</span>
+              <span className="font-mono text-[#6366f1]/60">{action.blocks_conflict_id}</span>
             </div>
           )}
         </div>
