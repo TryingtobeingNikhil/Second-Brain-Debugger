@@ -1,9 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design Tokens ───────────────────────────────────────────────────── */
 :root {
   --bg: #0a0a0f;
   --surface: rgba(255, 255, 255, 0.03);
@@ -14,18 +15,397 @@
   --text: #f1f5f9;
   --muted: #64748b;
   --glow: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4));
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── Base ────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background-color: var(--bg);
   color: var(--text);
   font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Space Grotesk', sans-serif;
 }
 
-code, pre {
+.font-mono, code, pre, .ai-text {
   font-family: 'JetBrains Mono', monospace;
+}
+
+/* ─── Noise / Gradient Background ────────────────────────────────────── */
+@keyframes noiseGradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.noise-gradient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: 
+    radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.04) 0%, transparent 60%);
+  background-size: 200% 200%;
+  animation: noiseGradientShift 20s ease infinite;
+  opacity: 0.04;
+}
+
+/* ─── Header cursor blink ─────────────────────────────────────────────── */
+@keyframes headerCursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.header-cursor {
+  display: inline-block;
+  width: 3px;
+  height: 1.1em;
+  background: var(--accent);
+  margin-left: 4px;
+  vertical-align: text-bottom;
+  animation: headerCursorBlink 1.2s step-end infinite;
+  border-radius: 1px;
+}
+
+/* ─── Typewriter cursor ───────────────────────────────────────────────── */
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--clarity);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: cursorBlink 1s step-end infinite;
+  border-radius: 1px;
+}
+
+.typewriter-cursor-accent {
+  background: var(--accent);
+}
+
+/* ─── Terminal box ────────────────────────────────────────────────────── */
+.terminal-box {
+  background: #080810;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 8px;
+  padding: 16px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: #10b981;
+  line-height: 1.7;
+  min-height: 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.terminal-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.03) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+@keyframes terminalCursor {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.terminal-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 1em;
+  background: #10b981;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: terminalCursor 0.8s step-end infinite;
+}
+
+/* ─── Shimmer animation ───────────────────────────────────────────────── */
+@keyframes shimmerSweep {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.shimmer-base {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+}
+
+.shimmer-base::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(99, 102, 241, 0.4) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: shimmerSweep 2.4s ease-in-out infinite;
+}
+
+/* ─── Pipeline connector dot animation ──────────────────────────────── */
+@keyframes dotAlongPath {
+  0%   { opacity: 0.5; }
+  100% { opacity: 0.5; }
+}
+
+/* ─── GlowCard hover ─────────────────────────────────────────────────── */
+.glow-card {
+  transition: transform 400ms var(--ease-spring), box-shadow 400ms var(--ease-spring);
+}
+
+.glow-card:hover {
+  transform: translateY(-2px);
+}
+
+/* ─── Section fade-in ────────────────────────────────────────────────── */
+@keyframes sectionReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-reveal {
+  animation: sectionReveal 400ms var(--ease-spring) both;
+}
+
+/* ─── Conflict border pulse (severity > 7) ─────────────────────────── */
+@keyframes conflictPulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.3), 0 0 16px rgba(239, 68, 68, 0.1); }
+  50%       { box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.7), 0 0 24px rgba(239, 68, 68, 0.25); }
+}
+
+.conflict-pulse {
+  animation: conflictPulse 2.5s ease-in-out infinite;
+}
+
+/* ─── Clarity impact moment ─────────────────────────────────────────── */
+@keyframes clarityGlowPulse {
+  0%   { box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.1); }
+  100% { box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.6), 0 0 40px rgba(16, 185, 129, 0.2); }
+}
+
+.clarity-impact {
+  animation: clarityGlowPulse 600ms ease-out forwards;
+}
+
+/* ─── Background dim ─────────────────────────────────────────────────── */
+@keyframes bgDim {
+  0%   { opacity: 0; }
+  30%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.bg-dim-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.03);
+  pointer-events: none;
+  z-index: 5;
+  animation: bgDim 800ms ease-out forwards;
+}
+
+/* ─── Category bar fill ──────────────────────────────────────────────── */
+@keyframes barFill {
+  from { width: 0%; }
+  to   { width: var(--target-width); }
+}
+
+.category-bar-fill {
+  animation: barFill 600ms var(--ease-spring) both;
+}
+
+/* ─── Chip stagger entry ─────────────────────────────────────────────── */
+@keyframes chipEntry {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ─── History drawer slide ───────────────────────────────────────────── */
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes drawerSlideOut {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+
+.drawer-open {
+  animation: drawerSlideIn 350ms var(--ease-spring) forwards;
+}
+
+.drawer-close {
+  animation: drawerSlideOut 300ms ease-in forwards;
+}
+
+/* ─── Bottom bar slide up ────────────────────────────────────────────── */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slideUp 400ms var(--ease-spring) both;
+}
+
+/* ─── Saved badge fade in ────────────────────────────────────────────── */
+@keyframes savedFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.saved-badge {
+  animation: savedFadeIn 500ms var(--ease-spring) both;
+}
+
+/* ─── Textarea focus glow ─────────────────────────────────────────────── */
+.textarea-glow:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.5), 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+/* ─── Analyze button pulse ─────────────────────────────────────────────── */
+@keyframes analyzeButtonPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+  50%       { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0.15); }
+}
+
+.btn-pulse {
+  animation: analyzeButtonPulse 2s ease-in-out infinite;
+}
+
+/* ─── Wipe animation (reset) ─────────────────────────────────────────── */
+@keyframes wipeOut {
+  from { clip-path: inset(0 0 0 0); opacity: 1; }
+  to   { clip-path: inset(0 0 100% 0); opacity: 0; }
+}
+
+.wipe-out {
+  animation: wipeOut 600ms var(--ease-spring) forwards;
+}
+
+/* ─── Textarea shrink ────────────────────────────────────────────────── */
+@keyframes textareaShrink {
+  from { opacity: 1; max-height: 200px; }
+  to   { opacity: 0; max-height: 0; overflow: hidden; }
+}
+
+.textarea-shrink {
+  animation: textareaShrink 400ms var(--ease-spring) forwards;
+}
+
+/* ─── Pipeline slide in ──────────────────────────────────────────────── */
+@keyframes pipelineSlideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.pipeline-slide-in {
+  animation: pipelineSlideIn 400ms var(--ease-spring) both;
+}
+
+/* ─── Ghost UI pulse ─────────────────────────────────────────────────── */
+@keyframes ghostPulse {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 0.5; }
+}
+
+.ghost-section {
+  animation: ghostPulse 3s ease-in-out infinite;
+}
+
+/* ─── Scrollbar styling ──────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+/* ─── SVG connection lines ───────────────────────────────────────────── */
+@keyframes dashOffset {
+  from { stroke-dashoffset: 20; }
+  to   { stroke-dashoffset: 0; }
+}
+
+.connection-line {
+  animation: dashOffset 600ms var(--ease-spring) both;
+}
+
+/* ─── Action expand ──────────────────────────────────────────────────── */
+.action-expand {
+  overflow: hidden;
+  transition: max-height 300ms var(--ease-spring), opacity 300ms var(--ease-spring);
+}
+
+/* ─── Mobile responsive helpers ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  .pipeline-desktop {
+    display: none;
+  }
+  .pipeline-mobile {
+    display: block;
+  }
+}
+
+@media (min-width: 769px) {
+  .pipeline-mobile {
+    display: none;
+  }
 }
