@@ -25,24 +25,55 @@ export function safeParseJSON<T>(text: string): T | null {
   }
 }
 
+/**
+ * Parses an OpenAI-compatible streaming response (SSE chunks with
+ * choices[0].delta.content tokens) and collects the full JSON
+ * the model is emitting token-by-token.
+ *
+ * Emits the parsed object exactly once when the stream finishes.
+ */
 export async function* parseStreamingJSON<T>(
   stream: ReadableStream<Uint8Array>
 ): AsyncGenerator<Partial<T>> {
   const reader = stream.getReader()
   const decoder = new TextDecoder()
-  let buffer = ''
+  let rawBuffer = ''      // raw SSE bytes buffer
+  let contentBuffer = ''  // accumulated content tokens from delta
 
   while (true) {
     const { done, value } = await reader.read()
     if (done) break
-    buffer += decoder.decode(value, { stream: true })
+    rawBuffer += decoder.decode(value, { stream: true })
 
-    const partial = safeParseJSON<Partial<T>>(buffer)
-    if (partial) yield partial
+    // Split on SSE line boundaries
+    const parts = rawBuffer.split('\n\n')
+    rawBuffer = parts.pop() ?? ''
+
+    for (const part of parts) {
+      for (const line of part.split('\n')) {
+        const trimmed = line.replace(/^data: /, '').trim()
+        if (!trimmed || trimmed === '[DONE]') continue
+
+        try {
+          const chunk = JSON.parse(trimmed)
+          // OpenAI-compatible: choices[0].delta.content
+          const token: string | undefined =
+            chunk?.choices?.[0]?.delta?.content
+          if (token) {
+            contentBuffer += token
+          }
+        } catch {
+          // ignore malformed chunks mid-stream
+        }
+      }
+    }
   }
 
-  const final = safeParseJSON<T>(buffer)
-  if (final) yield final
+  // After stream ends, parse the full accumulated content
+  if (contentBuffer.trim()) {
+    const parsed = safeParseJSON<Partial<T>>(contentBuffer)
+    if (parsed) yield parsed
+  }
 }
 
 // ─── Schema validation ─────────────────────────────────────────────────────────
