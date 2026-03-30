@@ -16,7 +16,16 @@ export function createSSEStream() {
     )
   }
 
-  const close = () => controller.close()
+  let closed = false
+  const close = () => {
+    if (closed) return
+    closed = true
+    try {
+      controller.close()
+    } catch {
+      // already closed — safe to ignore
+    }
+  }
 
   return { readable, send, close }
 }
