@@ -2,10 +2,10 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Second Brain Debugger — Debug Your Thoughts',
+  title: 'Second Brain Debugger — ML Cognitive Analysis',
   description:
-    "Dump your thoughts. Six AI stages parse, structure, find conflicts, extract clarity, plan actions, and ask the questions you've been avoiding.",
-  keywords: ['second brain', 'thought debugger', 'mental clarity', 'AI analysis'],
+    'A neural-network-style cognitive debugging interface. Six transformer stages parse, structure, detect conflicts, extract clarity, plan actions, and reflect.',
+  keywords: ['second brain', 'thought debugger', 'mental clarity', 'AI analysis', 'ML visualization'],
 }
 
 export default function RootLayout({
@@ -19,11 +19,17 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
           rel="stylesheet"
         />
+        <style dangerouslySetInnerHTML={{ __html: `
+          * { font-family: 'JetBrains Mono', monospace !important; }
+          body { overflow: hidden; background: #0a0a0a; }
+        ` }} />
       </head>
-      <body className="antialiased">{children}</body>
+      <body style={{ overflow: 'hidden', background: '#0a0a0a' }}>
+        {children}
+      </body>
     </html>
   )
 }
