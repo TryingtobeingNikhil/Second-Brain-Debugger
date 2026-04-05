@@ -49,7 +49,7 @@ All six stages green. Existential queries loaded. Training loss converged. `STAT
 **Export Model Card**
 The full debug report: conflicts, clarity score, tension peak, convergence epoch, recommended actions, existential queries. Formatted as an ML inference report — because that's exactly what it is.
 
-![Model card export — full structured debug report](assets/demo-06-model-card.jpeg)
+
 
 ---
 
