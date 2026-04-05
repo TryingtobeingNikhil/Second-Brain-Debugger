@@ -44,7 +44,7 @@ No affirmations. No breathing exercises. Just a stack trace of your own mind —
 **Complete Pipeline**
 All six stages green. Existential queries loaded. Training loss converged. `STATUS: Latent Space Balanced`.
 
-![Complete pipeline — all stages resolved, existential queries rendered](assets/demo-05-complete.jpeg)
+
 
 **Export Model Card**
 The full debug report: conflicts, clarity score, tension peak, convergence epoch, recommended actions, existential queries. Formatted as an ML inference report — because that's exactly what it is.
