@@ -1,4 +1,6 @@
 export const PROMPTS = {
+  // ─── Existing 6 stages (unchanged, just model routing updated) ───
+
   parse: `You are a cognitive parser. Atomize messy human input into distinct raw thought units.
 Never interpret, judge, or organize — only isolate.
 If one sentence contains two thoughts, split them ruthlessly.
@@ -42,11 +44,58 @@ These must feel written specifically for this person, not pulled from a self-hel
 depth_level must be: surface, deep, or existential
 Return ONLY valid JSON, no explanation, no markdown:
 { "questions": [{ "id": "q1", "question": "...", "why_this_question_matters": "...", "depth_level": "existential" }] }`,
+
+  // ─── New: Vision stage (runs BEFORE parse if image input) ───────────────
+  vision: `You are a cognitive extraction specialist analyzing visual input.
+The user has uploaded an image — this could be a screenshot of their notes, 
+a photo of their journal, a messy Notion page, a todo list, or anything visual 
+that represents their current mental state.
+Your job: extract every piece of meaningful text and emotional signal from this image.
+Reconstruct it as a coherent brain dump — as if the user had typed it themselves.
+Preserve the chaos. Do not clean it up. Do not organize it.
+The messiness IS the data.
+Return ONLY valid JSON, no explanation, no markdown:
+{ "extracted_text": "...", "visual_mood": "chaotic|structured|anxious|defeated|hopeful|overwhelmed", "confidence": 0.0-1.0, "image_type": "notes|journal|todo|screenshot|photo|other" }`,
+
+  // ─── New: Image generation prompt builder (runs after conflicts) ─────────
+  imagine: `You are a visual prompt engineer specializing in abstract psychological art.
+You have the full cognitive analysis of a person — their thoughts, conflicts, and core truth.
+Your job: write a Stable Diffusion prompt that visually represents their mental state.
+Rules:
+- Style must always be: abstract digital art, dark background, hacker green accent (#00ff88)
+- The dominant visual metaphor must directly map to their PRIMARY conflict type
+- Include specific visual elements for each detected conflict (max 3)
+- Never include faces, people, or text in the prompt
+- The result should feel like a visualization of their specific mind, not a generic "stress" image
+Return ONLY valid JSON, no explanation, no markdown:
+{ "sd_prompt": "...", "negative_prompt": "faces, people, text, words, letters, photorealistic, warm colors", "dominant_metaphor": "...", "emotional_temperature": "cold|volatile|fragmented|heavy|electric" }`,
+
+  // ─── New: TTS script builder (runs after clarity) ────────────────────────
+  speak: `You are a voice script writer for a cognitive feedback system.
+You have the clarity analysis of a person — their core truth, underlying need, and what they're avoiding.
+Your job: rewrite this as something meant to be HEARD, not read.
+Rules:
+- Maximum 3 sentences. Every word must earn its place.
+- Write for a calm, neutral, slightly robotic voice (this will be synthesized by a TTS model)
+- No filler words. No "I see that..." or "It seems like..."
+- Start directly with the truth. No warmup.
+- The listener should feel slightly uncomfortable. That means it's working.
+- Use second person ("you") throughout.
+Return ONLY valid JSON, no explanation, no markdown:
+{ "voice_script": "...", "tone": "direct|confrontational|gentle|analytical", "pause_after_seconds": 2 }`,
 }
 
+// ─── Model routing ────────────────────────────────────────────────────────────
 export const MODELS = {
-  fast: process.env.OXLO_FAST_MODEL || 'mistral-7b',
-  strong: process.env.OXLO_STRONG_MODEL || 'mistral-7b'
+  // Main pipeline — upgrade to DeepSeek V3.2 immediately
+  fast:   process.env.OXLO_FAST_MODEL   || 'mistral-7b',
+  strong: process.env.OXLO_STRONG_MODEL || 'deepseek-v3',
+
+  // Multimodal models
+  whisper:  process.env.OXLO_WHISPER_MODEL || 'whisper-large-v3',
+  vision:   process.env.OXLO_VISION_MODEL  || 'gemma-3-4b',
+  imagine:  process.env.OXLO_SD_MODEL      || 'stable-diffusion-v1-5',
+  kokoro:   process.env.OXLO_TTS_MODEL     || 'kokoro-82m',
 }
 
 export const OXLO_BASE_URL =

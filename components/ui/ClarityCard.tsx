@@ -81,8 +81,8 @@ export function ClarityCard({ clarity, onComplete }: ClarityCardProps) {
           <div
             className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-4"
             style={{
-              opacity: phase !== 'typing' ? 1 : 0,
-              transform: phase !== 'typing' ? 'translateY(0)' : 'translateY(8px)',
+              opacity: 1,
+              transform: 'translateY(0)',
               transition: 'opacity 400ms cubic-bezier(0.16,1,0.3,1), transform 400ms cubic-bezier(0.16,1,0.3,1)',
             }}
           >
@@ -100,8 +100,8 @@ export function ClarityCard({ clarity, onComplete }: ClarityCardProps) {
           <div
             className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-4"
             style={{
-              opacity: phase !== 'typing' ? 1 : 0,
-              transform: phase !== 'typing' ? 'translateY(0)' : 'translateY(8px)',
+              opacity: 1,
+              transform: 'translateY(0)',
               transition: 'opacity 500ms 100ms cubic-bezier(0.16,1,0.3,1), transform 500ms 100ms cubic-bezier(0.16,1,0.3,1)',
             }}
           >

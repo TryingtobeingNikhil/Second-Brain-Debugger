@@ -1,4 +1,5 @@
 import { streamSSE } from './stream'
+import { delay } from './retry'
 import { StreamEvent, StageName, StageResult } from '../types/analysis'
 
 export async function* runFullPipeline(
@@ -39,6 +40,9 @@ export async function* runFullPipeline(
         }
       }
       console.timeEnd(`[PIPELINE] ${stage}`)
+      
+      // Add a small sequential delay to prevent rate limit spikes
+      await delay(1500)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Network error'
       console.error(`[PIPELINE] ${stage} network failure:`, message)

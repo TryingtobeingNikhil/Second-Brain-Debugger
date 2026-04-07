@@ -6,6 +6,9 @@ import {
 import {
   StageResult, StageName, StreamEvent
 } from '@/lib/types/analysis'
+import MicButton from '@/components/MicButton'
+import ImagineNode from '@/components/ImagineNode'
+import SpeakNode from '@/components/SpeakNode'
 
 // ─── Design Tokens (inline for canvas architecture) ──────────────────────────
 const T = {
@@ -27,7 +30,7 @@ const T = {
 }
 
 // ─── State Machine ────────────────────────────────────────────────────────────
-type Stage = 'idle'|'parsing'|'structuring'|'detecting'|'clarifying'|'planning'|'reflecting'|'done'
+type Stage = 'idle'|'parsing'|'structuring'|'detecting'|'imagining'|'clarifying'|'speaking'|'planning'|'reflecting'|'done'
 
 interface AppState {
   stage: Stage
@@ -48,7 +51,7 @@ type Action =
 
 const LOSS_MAP: Record<Stage, number> = {
   idle: 0.85, parsing: 0.72, structuring: 0.55, detecting: 0.61,
-  clarifying: 0.34, planning: 0.18, reflecting: 0.12, done: 0.09,
+  imagining: 0.45, clarifying: 0.34, speaking: 0.25, planning: 0.18, reflecting: 0.12, done: 0.09,
 }
 
 const STATUS_TEXT: Record<Stage, string> = {
@@ -56,7 +59,9 @@ const STATUS_TEXT: Record<Stage, string> = {
   parsing: 'Harvesting input signal...',
   structuring: 'Propagating forward pass...',
   detecting: 'Backpropagating conflicts...',
+  imagining: 'Sampling latent space...',
   clarifying: 'Converging to clarity...',
+  speaking: 'Synthesizing audio waveform...',
   planning: 'Computing loss gradients...',
   reflecting: 'Reflecting on latent space...',
   done: '● Latent Space Balanced',
@@ -152,12 +157,16 @@ function CursorGlow() {
 }
 
 // ─── Attention Heatmap Input ──────────────────────────────────────────────────
-function AttentionInput({ value, onChange, onRun, disabled }: {
+function AttentionInput({ value, onChange, onRun, disabled, onTranscript }: {
   value: string; onChange: (v: string) => void; onRun: () => void; disabled: boolean
+  onTranscript: (t: string) => void
 }) {
   const [weights, setWeights] = useState<Record<string, number>>({})
   const [showAttn, setShowAttn] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const [dragOver, setDragOver] = useState(false)
+  const [imgThumb, setImgThumb] = useState<string | null>(null)
+  const [scanning, setScanning] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const computeWeights = useCallback((text: string) => {
     const words = text.split(' ')
@@ -172,8 +181,27 @@ function AttentionInput({ value, onChange, onRun, disabled }: {
   }, [])
 
   const handleBlur = () => { if (value.trim()) computeWeights(value) }
-  const handleChange = (v: string) => {
-    onChange(v)
+  const handleChange = (v: string) => { onChange(v) }
+
+  async function processImage(file: File) {
+    setScanning(true)
+    const reader = new FileReader()
+    reader.onload = (e) => setImgThumb(e.target?.result as string)
+    reader.readAsDataURL(file)
+    try {
+      const fd = new FormData()
+      fd.append('image', file)
+      const res = await fetch('/api/multimodal/vision', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (data.extracted_text) onChange(data.extracted_text)
+    } catch {}
+    setScanning(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file && file.type.startsWith('image/')) processImage(file)
   }
 
   const words = value.split(' ')
@@ -184,7 +212,30 @@ function AttentionInput({ value, onChange, onRun, disabled }: {
   return (
     <div style={{ position:'absolute', top:'44%', left:'3%', transform:'translateY(-50%)', width:280, zIndex:10 }}>
       <div style={{ fontSize:9, color:'rgba(0,255,136,0.3)', letterSpacing:'0.12em', fontFamily:T.mono, marginBottom:4 }}>[INPUT_LAYER]</div>
-      <div style={{ background:T.surface, border:`1px dashed rgba(0,255,136,0.18)`, borderRadius:4, padding:'14px 16px' }}>
+      <div
+        style={{ background:T.surface, border:`1px dashed ${dragOver ? T.green : 'rgba(0,255,136,0.18)'}`, borderRadius:4, padding:'14px 16px', transition:'border-color 0.2s', position:'relative' }}
+        onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+      >
+        {/* Image thumbnail + scanning label */}
+        {imgThumb && (
+          <div style={{ position:'absolute', top:8, right:8, zIndex:5 }}>
+            <img src={imgThumb} alt="preview" style={{ width:60, height:60, objectFit:'cover', borderRadius:2, border:`1px dashed rgba(0,255,136,0.4)` }} />
+            {scanning && (
+              <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,0,0,0.6)', borderRadius:2 }}>
+                <span style={{ fontFamily:T.mono, fontSize:8, color:T.green, animation:'blink 0.7s step-end infinite' }}>SCANNING...</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {dragOver && (
+          <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(0,255,136,0.05)', borderRadius:4, zIndex:4, pointerEvents:'none' }}>
+            <span style={{ fontFamily:T.mono, fontSize:10, color:T.green, animation:'blink 0.7s step-end infinite' }}>DROP IMAGE TO SCAN</span>
+          </div>
+        )}
+
         {showAttn && value ? (
           <div style={{ cursor:'text' }} onClick={() => { if (!disabled) setShowAttn(false) }}>
             <div style={{ fontSize:9, color:'rgba(0,255,136,0.4)', fontFamily:T.mono, marginBottom:8, letterSpacing:'0.06em' }}>[ATTENTION] click to edit</div>
@@ -209,7 +260,7 @@ function AttentionInput({ value, onChange, onRun, disabled }: {
             onChange={e => handleChange(e.target.value.slice(0, 5000))}
             onBlur={handleBlur}
             disabled={disabled}
-            placeholder="Dump your thoughts here..."
+            placeholder="Dump your thoughts here... or drop an image, or use mic ↓"
             rows={6}
             style={{ width:'100%', background:'transparent', border:'none', outline:'none', resize:'none', fontFamily:T.mono, fontSize:11, color:T.textPrimary, lineHeight:1.7, caretColor:T.green }}
           />
@@ -220,11 +271,24 @@ function AttentionInput({ value, onChange, onRun, disabled }: {
             <div style={{ height:'100%', width:`${conf}%`, background:T.green, borderRadius:1, transition:'width 800ms ease-out' }} />
           </div>
         </div>
+        {/* Mic + Upload row */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:10 }}>
+          <MicButton onTranscript={onTranscript} disabled={disabled} />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={disabled}
+            title="Upload image"
+            style={{ background:'transparent', border:'1px dashed rgba(0,255,136,0.25)', color:'rgba(0,255,136,0.6)', fontFamily:T.mono, fontSize:10, padding:'4px 8px', cursor:'pointer', borderRadius:2 }}
+          >⬆ IMG</button>
+          <input ref={fileInputRef} type="file" accept="image/*" style={{ display:'none' }}
+            onChange={e => { const f = e.target.files?.[0]; if (f) processImage(f) }}
+          />
+        </div>
         <button
           onClick={onRun}
           disabled={disabled || value.trim().length < 10}
           style={{
-            marginTop:12, width:'100%', padding:'8px 0', background:'transparent',
+            marginTop:10, width:'100%', padding:'8px 0', background:'transparent',
             border:`1px dashed ${disabled ? 'rgba(0,255,136,0.2)' : T.green}`,
             color: disabled ? 'rgba(0,255,136,0.3)' : T.green,
             fontFamily:T.mono, fontSize:11, letterSpacing:'0.08em', cursor: disabled?'not-allowed':'pointer',
@@ -233,10 +297,12 @@ function AttentionInput({ value, onChange, onRun, disabled }: {
         >
           {disabled ? '[ ▸ PROCESSING... ]' : '[ > RUN FORWARD PASS ]'}
         </button>
+        <style>{`@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }`}</style>
       </div>
     </div>
   )
 }
+
 
 // ─── Node Card Base ───────────────────────────────────────────────────────────
 function NodeCard({ label, layerLabel, top, left, width, active, redPulse, children, confColor }: {
@@ -515,7 +581,7 @@ function NeuralEdges({ active, backprop, hoveredNode }: { active: boolean; backp
   const svgRef = useRef<SVGSVGElement>(null)
   const weightsRef = useRef<number[]>([])
   if (weightsRef.current.length === 0) {
-    weightsRef.current = Array.from({ length: 8 }, () => randFloat(0.1, 0.99))
+    weightsRef.current = Array.from({ length: 10 }, () => randFloat(0.1, 0.99))
   }
   const edgeWeights = weightsRef.current
   const [dims, setDims] = useState({ w: 1440, h: 900 })
@@ -538,6 +604,8 @@ function NeuralEdges({ active, backprop, hoveredNode }: { active: boolean; backp
     { id:'cn-ac', x1: W*0.46+260, y1: H*0.20, x2: W*0.67,       y2: H*0.40 },
     { id:'cl-ac', x1: W*0.46+260, y1: H*0.63, x2: W*0.67,       y2: H*0.40 },
     { id:'ac-ex', x1: W*0.67+250, y1: H*0.40, x2: W*0.84,       y2: H*0.40 },
+    { id:'cn-im', x1: W*0.46+260, y1: H*0.20, x2: W*0.67,       y2: H*0.28 },
+    { id:'cl-sp', x1: W*0.46+260, y1: H*0.63, x2: W*0.67,       y2: H*0.62 },
   ], [W, H])
 
   return (
@@ -780,24 +848,26 @@ export default function Home() {
     if (stage === 'parsing') return 'atomic'
     if (stage === 'structuring') return 'pipeline'
     if (stage === 'detecting') return 'conflict'
+    if (stage === 'imagining') return 'imagine'
     if (stage === 'clarifying') return 'clarity'
+    if (stage === 'speaking') return 'speak'
     if (stage === 'planning') return 'action'
     if (stage === 'reflecting') return 'existential'
     if (stage === 'done') return 'done'
     return 'none'
   }, [appState.stage])
 
-  // Run a single stage
-  async function runStage(stage: StageName, inputText: string, previousStages: StageResult): Promise<unknown> {
-    const res = await fetch(`/api/analyze/${stage}`, {
+  // Run a single stage by explicit endpoint URL
+  async function runStageCustom(endpoint: string, inputText: string, previousStages: StageResult): Promise<unknown> {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ input: inputText, previousStages }),
       signal: abortRef.current?.signal,
     })
     if (!res.ok || !res.body) {
-      const err = await res.json().catch(() => ({ error: `Stage ${stage} failed` }))
-      throw new Error(err.error || `Stage ${stage} failed`)
+      const err = await res.json().catch(() => ({ error: `Endpoint ${endpoint} failed` }))
+      throw new Error(err.error || `Endpoint ${endpoint} failed`)
     }
     const reader = res.body.getReader()
     const decoder = new TextDecoder()
@@ -813,11 +883,16 @@ export default function Home() {
         try {
           const event: StreamEvent = JSON.parse(chunk.slice(6))
           if (event.type === 'stage_complete') stageData = event.data
-          if (event.type === 'error') throw new Error(event.message ?? `Stage ${stage} error`)
+          if (event.type === 'error') throw new Error(event.message ?? `Endpoint error`)
         } catch { /* ignore partial */ }
       }
     }
     return stageData
+  }
+
+  // Run a legacy analyze stage (kept for backward compat)
+  async function runStage(stage: StageName, inputText: string, previousStages: StageResult): Promise<unknown> {
+    return runStageCustom(`/api/analyze/${stage}`, inputText, previousStages)
   }
 
   // Master run
@@ -834,19 +909,31 @@ export default function Home() {
     computeRef.current = setInterval(() => dispatch({ type: 'TICK_COMPUTE' }), 180)
 
     const accumulated: StageResult = {}
-    const stagePairs: Array<[StageName, Stage, number, string]> = [
-      ['parse',     'parsing',     0.72, '[PROCESS] AtomicNode.parse(input)'],
-      ['structure', 'structuring', 0.55, '[PROCESS] Structure.build(thoughts)'],
-      ['conflicts', 'detecting',   0.61, '[PROCESS] Conflict.detect(threshold=0.72)\n[METRIC] tension_score: 0.847'],
-      ['clarity',   'clarifying',  0.34, '[METRIC] clarity_delta: +0.34'],
-      ['actions',   'planning',    0.18, '[OPTIMIZE] Clarity.backprop(depth="existential")'],
-      ['reflect',   'reflecting',  0.12, '[PROCESS] Existential.load(q_depth=max)'],
+    const stagePairs: Array<[string, Stage, number, string]> = [
+      ['parse',     'parsing',     0.22, '[PROCESS] AtomicNode.parse(input)'],
+      ['structure', 'structuring', 0.18, '[PROCESS] Structure.build(thoughts)'],
+      ['conflicts', 'detecting',   0.19, '[PROCESS] Conflict.detect(threshold=0.72)\n[METRIC] tension_score: 0.847'],
+      ['imagine',   'imagining',   0.14, '[SAMPLE] LatentSpace.diffuse(conflicts)'],
+      ['clarity',   'clarifying',  0.11, '[METRIC] clarity_delta: +0.34'],
+      ['speak',     'speaking',    0.08, '[SYNTH] Audio.kokoro(voice_script)'],
+      ['actions',   'planning',    0.05, '[OPTIMIZE] Clarity.backprop(depth="existential")'],
+      ['reflect',   'reflecting',  0.03, '[PROCESS] Existential.load(q_depth=max)'],
     ]
 
     try {
       for (const [stageName, appStage, loss, log] of stagePairs) {
         dispatch({ type: 'TICK_STAGE', stage: appStage, loss, log })
-        const data = await runStage(stageName, input, { ...accumulated })
+        // imagine and speak use /api/pipeline/* routes; others use /api/analyze/*
+        const isMultimodal = stageName === 'imagine' || stageName === 'speak'
+        const endpoint = isMultimodal ? `/api/pipeline/${stageName}` : `/api/analyze/${stageName}`
+        
+        // Don't send huge base64 strings back to the AI prompt! (Avoids 502 Bad Gateway)
+        const safeAccumulated = JSON.parse(JSON.stringify(accumulated))
+        if (safeAccumulated.imagine && safeAccumulated.imagine.image_b64) {
+          delete safeAccumulated.imagine.image_b64
+        }
+        
+        const data = await runStageCustom(endpoint, input, safeAccumulated)
         ;(accumulated as Record<string, unknown>)[stageName] = data
         setResults({ ...accumulated })
         dispatch({ type: 'ADD_LOG', log: `[SUCCESS] ${stageName} → loss=${loss}` })
@@ -938,6 +1025,10 @@ export default function Home() {
       {/* Cursor glow */}
       <CursorGlow />
 
+      {/* CRT Effects */}
+      <div className="scanlines" />
+      <div className="crt-flicker" />
+
       {/* Dim overlay for existential sequence */}
       {dimOverlay && (
         <div style={{
@@ -951,7 +1042,7 @@ export default function Home() {
       <NeuralEdges active={isActive || isDone} backprop={backprop} hoveredNode={null} />
 
       {/* ── LAYER 0: INPUT ── */}
-      <AttentionInput value={input} onChange={setInput} onRun={handleRun} disabled={running} />
+      <AttentionInput value={input} onChange={setInput} onRun={handleRun} disabled={running} onTranscript={(t) => setInput(t)} />
 
       {/* ── LAYER 1: HIDDEN L1 ── */}
       <AtomicThoughtsNode thoughts={results.parse?.thoughts} active={activeNode === 'atomic' || isDone} />
@@ -961,7 +1052,9 @@ export default function Home() {
       <ConflictNode conflicts={results.conflicts?.conflicts} active={activeNode === 'conflict' || isDone} />
       <ClarityNode clarity={results.clarity?.clarity} active={activeNode === 'clarity' || isDone} />
 
-      {/* ── LAYER 3: HIDDEN L3 ── */}
+      {/* ── LAYER 3: HIDDEN L3 — ImagineNode, SpeakNode, ActionNode ── */}
+      <ImagineNode data={results.imagine as any} active={activeNode === 'imagine' || isDone} />
+      <SpeakNode   data={results.speak   as any} active={activeNode === 'speak'   || isDone} />
       <ActionNode actions={results.actions?.actions} active={activeNode === 'action' || isDone} />
 
       {/* ── LAYER 4: OUTPUT ── */}

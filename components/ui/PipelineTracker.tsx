@@ -10,7 +10,7 @@ interface PipelineTrackerProps {
 
 const ALL_STAGES: StageName[] = ['parse', 'structure', 'conflicts', 'clarity', 'actions', 'reflect']
 
-const STAGE_ICONS: Record<StageName, string> = {
+const STAGE_ICONS: Partial<Record<StageName, string>> = {
   parse:     '⟳',
   structure: '⊞',
   conflicts: '⚡',

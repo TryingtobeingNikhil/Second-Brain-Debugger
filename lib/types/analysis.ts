@@ -25,6 +25,10 @@ export type StageName =
   | 'clarity'
   | 'actions'
   | 'reflect'
+  | 'transcribe'
+  | 'vision'
+  | 'imagine'
+  | 'speak'
 
 export interface Thought {
   id: string
@@ -80,6 +84,10 @@ export interface StageResult {
   clarity?: { clarity: Clarity }
   actions?: { actions: Action[] }
   reflect?: { questions: Question[] }
+  transcribe?: any
+  vision?: any
+  imagine?: any
+  speak?: any
 }
 
 export interface StreamEvent {

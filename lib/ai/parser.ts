@@ -103,13 +103,17 @@ export function validateStageResult<S extends StageName>(
 }
 
 export function getEmptyStageResult(stage: StageName): object {
-  const empty: Record<StageName, object> = {
+  const empty: Partial<Record<StageName, object>> = {
     parse:     { thoughts: [] },
     structure: { categories: [] },
     conflicts: { conflicts: [] },
     clarity:   { clarity: { core_truth: '', underlying_need: '', what_youre_avoiding: '' } },
     actions:   { actions: [] },
-    reflect:   { questions: [] }
+    reflect:   { questions: [] },
+    transcribe: {},
+    vision:    {},
+    imagine:   {},
+    speak:     {}
   }
-  return empty[stage]
+  return empty[stage] || {}
 }

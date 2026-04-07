@@ -99,6 +99,40 @@ export const ReflectSchema = z.object({
     .length(5),
 })
 
+// ─── Multimodal stage schemas ──────────────────────────────────────────────────
+
+export const VisionSchema = z.object({
+  extracted_text: z.string(),
+  visual_mood: z.enum([
+    'chaotic', 'structured', 'anxious',
+    'defeated', 'hopeful', 'overwhelmed'
+  ]),
+  confidence: z.number().min(0).max(1),
+  image_type: z.enum([
+    'notes', 'journal', 'todo',
+    'screenshot', 'photo', 'other'
+  ]),
+})
+
+export const ImagineSchema = z.object({
+  sd_prompt: z.string(),
+  negative_prompt: z.string(),
+  dominant_metaphor: z.string(),
+  emotional_temperature: z.enum([
+    'cold', 'volatile', 'fragmented', 'heavy', 'electric'
+  ]),
+})
+
+export const SpeakSchema = z.object({
+  voice_script: z.string().max(500),
+  tone: z.enum(['direct', 'confrontational', 'gentle', 'analytical']),
+  pause_after_seconds: z.number().min(0).max(10),
+})
+
+export type VisionResult   = z.infer<typeof VisionSchema>
+export type ImagineResult  = z.infer<typeof ImagineSchema>
+export type SpeakResult    = z.infer<typeof SpeakSchema>
+
 // ─── Unified stage map ─────────────────────────────────────────────────────────
 
 export const STAGE_SCHEMAS = {
@@ -108,6 +142,10 @@ export const STAGE_SCHEMAS = {
   clarity: ClaritySchema,
   actions: ActionsSchema,
   reflect: ReflectSchema,
+  transcribe: z.any(),
+  vision: VisionSchema,
+  imagine: ImagineSchema,
+  speak: SpeakSchema,
 } as const
 
 export type StageSchemaMap = typeof STAGE_SCHEMAS
