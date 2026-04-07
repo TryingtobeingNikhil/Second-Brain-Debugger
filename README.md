@@ -4,14 +4,25 @@
 
 *because your biological neural network is throwing unhandled exceptions*
 
-`v1.0.0` &nbsp;·&nbsp; `pipeline: armed` &nbsp;·&nbsp; `your thoughts: unoptimized`
+`v2.0.0` &nbsp;·&nbsp; `pipeline: armed` &nbsp;·&nbsp; `multimodal: enabled`
 
-[![Live Demo](https://img.shields.io/badge/live_demo-00ff88?style=flat-square&logoColor=black)](https://your-deployment-url.vercel.app)
+[![Live Demo](https://img.shields.io/badge/live_demo-00ff88?style=flat-square&logoColor=black)](https://second-brain-debugger-2a6a0mm6a-thanos1434xd-7688s-projects.vercel.app)
 &nbsp;
 [![Next.js](https://img.shields.io/badge/next.js_14-0a0a0a?style=flat-square)](https://nextjs.org)
 &nbsp;
 
 </div>
+
+---
+
+## 📡 The Multimodal Upgrade (v2.0)
+
+Your thoughts aren't just text. Now, the debugger isn't either.
+
+- **📸 Vision Extraction (Gemma-3):** Drop a screenshot of your notes, a photo of your messy journal, or a Notion page. The system extracts the "raw thought dump" directly from the pixels.
+- **🎤 Voice Input (Whisper):** Speak your mind. Perfect for 2am realizations where typing is too much friction.
+- **🎨 Latent Space Imaging (SD):** After processing your conflicts, the pipeline samples the latent space to generate a unique generative art piece representing your current mental state.
+- **🔊 Voice Synthesis (Kokoro-82m):** Hear your core truth spoken back to you in a calm, direct cognitive-feedback voice.
 
 ---
 
@@ -36,20 +47,6 @@ Your brain goes: *[SEGMENTATION FAULT]*
 Six stages. Real AI. Your actual thoughts — parsed, structured, conflict-detected, clarified, actioned, and reflected back at you like a senior engineer just reviewed your brain's pull request.
 
 No affirmations. No breathing exercises. Just a stack trace of your own mind — and a patch.
-
----
-
-## Demo
-
-**Complete Pipeline**
-All six stages green. Existential queries loaded. Training loss converged. `STATUS: Latent Space Balanced`.
-
-
-
-**Export Model Card**
-The full debug report: conflicts, clarity score, tension peak, convergence epoch, recommended actions, existential queries. Formatted as an ML inference report — because that's exactly what it is.
-
-
 
 ---
 
@@ -131,67 +128,18 @@ const SBD = {
   ],
   ai: {
     provider:     "Oxlo API",
-    fast_model:   "mistral-7b",    // Stage 1: parse fast, think later
-    strong_model: "mixtral-8x7b",  // Stages 2-6: actually think
+    fast_model:   "mistral-7b",      // Cognitive atomization
+    strong_model: "mistral-7b",      // Scaled for stability vs deepseek-v3
+    multimodal:   ["gemma-3 (vision)", "kokoro (tts)", "stable-diffusion"]
   },
   validation:  "Zod — every stage, every response, no exceptions",
   state:       "useReducer state machine",
                // idle → parsing → structuring → detecting →
                // clarifying → planning → reflecting → done
-               // useState would have been a crime scene
   runtime:     "Vercel Edge",      // cold starts are the enemy
   streaming:   "SSE end-to-end",   // you see it as it thinks
 }
 ```
-
----
-
-## The Design System: *NSA Meets Notion*
-
-Brutalist. Terminal. Hacker-green. Every pixel earned its place.
-
-```css
---bg:      #0a0a0a;                    /* the void */
---accent:  #00ff88;                    /* the only color that matters */
---border:  1px dashed rgba(0,255,136,0.3);
---font:    'JetBrains Mono', monospace; /* ALL AI output. non-negotiable. */
-```
-
-| Component | What it does | Why it exists |
-|-----------|-------------|---------------|
-| `EEGOscilloscope` | Live brainwave monitor | It moves because the model is thinking. Not decoration. |
-| `AttentionHeatmap` | Highlights keywords as you type | You see what the AI will focus on *before* it does |
-| `NeuralEdges` | SVG paths connecting UI cards | Shows live weights `w: 0.84` + backprop animations on conflict |
-| `CognitiveFingerprint` | Unique signature per session | Every debug session is different. So is yours. |
-| `ModelCard` | Final output as ML inference report | Because that's exactly what it is |
-
----
-
-## Architecture: The Three Decisions That Matter
-
-**1. Why 6 separate API routes and not one giant prompt?**
-
-Because each stage validates its output with Zod before the next stage touches it. Stage 3 (Conflicts) is reasoning on top of *guaranteed clean data* from Stage 2. One big prompt gives you one big guess. The pipeline gives you six verified passes.
-
-**2. Why Edge Runtime?**
-
-The first character of Stage 1 output should appear in under a second. Edge eliminates cold starts. Combined with SSE, users see real output before Stage 2 has even initialized. Latency is a UX decision.
-
-**3. Why `useReducer` and not `useState`?**
-
-Six stages. Eight possible states. Concurrent streaming updates. Error recovery paths. `useState` for this would look like a commit message that says "fixed stuff." The reducer makes every state transition explicit, traceable, and — fitting for a debugger — debuggable.
-
----
-
-## The 900ms Pause
-
-After Stage 4 (Clarity) resolves, the UI holds for 900 milliseconds before the output renders.
-
-That is not a slow API. That is not a bug. That is a deliberate design choice.
-
-The silence before something true lands harder than if it just appeared. `triggerImpactMoment()` fires once — guarded by a `useRef` because firing it twice would break the spell — and then the typewriter takes over.
-
-Some UX decisions are measured in milliseconds. This one is.
 
 ---
 
@@ -204,11 +152,16 @@ npm install
 ```
 
 ```env
-# .env.local — don't commit this. obviously.
+# .env.local — setup your Oxlo credentials
 OXLO_API_KEY=your_key_here
 OXLO_BASE_URL=https://api.oxlo.ai/v1
 OXLO_FAST_MODEL=mistral-7b
-OXLO_STRONG_MODEL=mixtral-8x7b
+OXLO_STRONG_MODEL=mistral-7b
+
+# Multimodal endpoints
+OXLO_VISION_MODEL=gemma-3-4b
+OXLO_SD_MODEL=stable-diffusion-v1-5
+OXLO_TTS_MODEL=kokoro-82m
 ```
 
 ```bash
@@ -216,7 +169,7 @@ npm run dev
 # → localhost:3000
 ```
 
-Open it. Type something you've been avoiding thinking about.
+Open it. Type something you've been avoiding thinking about. Or drop an image.
 
 See what the pipeline finds.
 
@@ -233,29 +186,22 @@ app/
     clarity/      ← Stage 4: the honest part
     actions/      ← Stage 5: what you actually do next
     reflect/      ← Stage 6: questions you didn't know to ask
+  api/pipeline/   
+    imagine/      ← Stage 7: Sampling latent space visual metaphors
+    speak/        ← Stage 8: Waveform synthesis
   page.tsx        ← the terminal. where it all happens.
 
-components/ui/
-  PipelineTracker.tsx      ← always visible. always watching.
-  EEGOscilloscope.tsx      ← the brain is working
-  AttentionHeatmap.tsx     ← the brain is watching
-  CognitiveFingerprint.tsx ← your session's unique signature
-  ActionStep.tsx           ← one patch at a time
+components/
+  ImagineNode.tsx    ← Abstract art visualization
+  SpeakNode.tsx      ← Audio feedback interface
+  MicButton.tsx      ← Voice dumping trigger
+  ui/
+    PipelineTracker.tsx ← always visible. always watching.
 
 lib/ai/
   pipeline.ts   ← AsyncGenerator. the spine of everything.
-  schemas.ts    ← Zod contracts for all 6 stages
-  prompts.ts    ← system prompts + model config
-  stream.ts     ← SSE utilities
-  parser.ts     ← safeParseJSON. because AI hallucinates structure.
-  retry.ts      ← withRetry: 2 attempts, 30s timeout, exponential backoff
-
-lib/
-  validation.ts     ← sanitize input, cap at 5000 chars
-  observability.ts  ← knows when things are about to go wrong
-
-middleware.ts   ← rate limit: 10 req/min per IP
-                   (be reasonable. this isn't a thought farm.)
+  schemas.ts    ← Zod contracts for all stages
+  retry.ts      ← withRetry: Handling 429 rate limits + exponential backoff
 ```
 
 ---
@@ -279,7 +225,7 @@ Your thoughts are yours. The debugger is free. The existential crisis is complim
 >
 > but at least now you have the stack trace.
 >
-> — SBD v1.0.0
+> — SBD v2.0.0
 ```
 
 *built with too much coffee and just enough clarity*
