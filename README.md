@@ -1,4 +1,3 @@
-````markdown
 <div align="center">
 
 # `SBD://` Second Brain Debugger
@@ -233,4 +232,3 @@ Your thoughts are yours. The debugger is free. The existential crisis is complim
 *Built with too much coffee and just enough clarity.*
 
 </div>
-````
