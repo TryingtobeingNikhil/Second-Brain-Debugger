@@ -1,6 +1,6 @@
 <div align="center">
 
-# `SBD://` Second Brain Debugger
+# `SBD://` Second Brain Debugger...
 
 *Because your biological neural network is throwing unhandled exceptions.*
 
